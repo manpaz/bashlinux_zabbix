@@ -1,0 +1,50 @@
+---
+- yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - mariadb-server
+    - MySQL-python
+
+- service:
+    name: mariadb
+    enabled: true
+
+- file:
+    path: "{{ mysql_datadir }}"
+    owner: mysql
+    group: mysql
+    state: directory
+
+- sefcontext:
+    target: "{{ mysql_datadir }}(/.*)?"
+    setype: mysqld_db_t
+
+- lineinfile:
+    path: /etc/my.cnf.d/client.cnf
+    insertafter: '^\[client\]'
+    regexp: "^socket=.*"
+    line: "socket={{ mysql_datadir }}/mysql.sock"
+
+- replace:
+    path: /etc/my.cnf
+    regexp: "^socket=.*"
+    replace: "socket={{ mysql_datadir }}/mysql.sock"
+
+- replace:
+    path: /etc/my.cnf
+    regexp: "^datadir=.*"
+    replace: "datadir={{ mysql_datadir }}"
+  notify: restart mysql
+
+- mysql_db:
+    name: "{{ mysql_database }}"
+    collation: utf8_bin
+    encoding: utf8
+    login_unix_socket: "{{ mysql_datadir}}/mysql.sock"
+
+- mysql_user:
+    name: "{{ mysql_user }}"
+    password: "{{ mysql_pass }}"
+    priv: "zabbix.*:ALL"
+    login_unix_socket: "{{ mysql_datadir}}/mysql.sock"

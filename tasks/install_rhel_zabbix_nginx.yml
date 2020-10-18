@@ -1,0 +1,28 @@
+---
+- yum:
+    name: epel-release
+    state: present
+
+- yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - fping
+    - nginx
+
+- service:
+    name: nginx
+    enabled: true
+    state: started
+
+- firewalld:
+    service: http
+    immediate: true
+    permanent: true
+    state: enabled
+
+- firewalld:
+    service: https
+    immediate: true
+    permanent: true
+    state: enabled

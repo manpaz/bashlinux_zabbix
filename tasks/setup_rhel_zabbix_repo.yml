@@ -1,0 +1,14 @@
+---
+- yum_repository:
+    name: zabbix
+    description: Zabbix YUM repo
+    baseurl: "https://repo.zabbix.com/zabbix/5.0/rhel/{{ ansible_facts['distribution_major_version'] }}/$basearch/"
+    gpgcheck: true
+    gpgkey: https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-A14FE591
+
+- yum_repository:
+    name: zabbix-frontend
+    description: Zabbix Frontend YUM repo
+    baseurl: "https://repo.zabbix.com/zabbix/5.0/rhel/{{ ansible_facts['distribution_major_version'] }}/$basearch/frontend"
+    gpgcheck: true
+    gpgkey: https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-A14FE591

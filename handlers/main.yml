@@ -1,0 +1,27 @@
+---
+# handlers file for bashlinux_zabbix
+
+- service:
+    name: mariadb
+    state: restarted
+  listen: restart mysql
+
+- service:
+    name: nginx
+    state: restarted
+  listen: restart web
+
+- service:
+    name: rh-php72-php-fpm
+    state: restarted
+  listen: restart php
+
+- service:
+    name: zabbix-server
+    state: restarted
+  listen: restart zabbix server
+
+- service:
+    name: zabbix-agent
+    state: restarted
+  listen: restart zabbix agent

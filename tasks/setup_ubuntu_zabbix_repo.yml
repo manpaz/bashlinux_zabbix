@@ -1,0 +1,13 @@
+---
+#- file:
+#    path: /etc/apt/sources.list.d/zabbix.list
+#    state: absent
+
+- apt_key:
+    url: https://repo.zabbix.com/zabbix-official-repo.key
+    state: present
+
+- apt_repository:
+    repo: deb https://repo.zabbix.com/zabbix/5.0/ubuntu/ {{ ansible_facts['distribution_release'] }} main
+    state: present
+    filename: zabbix

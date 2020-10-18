@@ -1,0 +1,12 @@
+---
+# defaults file for bashlinux_zabbix
+
+zabbix_server_ip: ""
+zabbix_server: false
+zabbix_agent: true
+mysql_datadir: /mnt/dbs/mysql
+mysql_database: "zabbix"
+mysql_user: "zabbix"
+mysql_pass: ""
+php_timezone: ""
+web_servername: ""

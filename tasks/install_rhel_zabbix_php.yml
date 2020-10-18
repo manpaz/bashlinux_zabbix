@@ -1,0 +1,41 @@
+---
+- yum:
+    name: centos-release-scl
+    state: present
+
+- yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - rh-php72
+    - rh-php72-php-bcmath
+    - rh-php72-php-fpm
+    - rh-php72-php-gd
+    - rh-php72-php-ldap
+    - rh-php72-php-mbstring
+    - rh-php72-php-mysqlnd
+    - rh-php72-php-xml
+
+- file:
+    name: "/var/opt/rh/rh-php72/lib/php/{{ item }}"
+    state: directory
+    group: nginx
+  with_items:
+    - opcache
+    - session
+    - wsdlcache
+
+- lineinfile:
+    path: /etc/opt/rh/rh-php72/php.ini
+    regexp: "^pdo_mysql.default_socket=.*"
+    line: "pdo_mysql.default_socket={{ mysql_datadir }}/mysql.sock"
+
+- lineinfile:
+    path: /etc/opt/rh/rh-php72/php.ini
+    regexp: "^mysqli.default_socket =.*"
+    line: "mysqli.default_socket = {{ mysql_datadir }}/mysql.sock"
+
+- service:
+    name: rh-php72-php-fpm
+    enabled: true
+    state: started

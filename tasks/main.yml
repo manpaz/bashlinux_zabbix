@@ -1,0 +1,34 @@
+---
+# tasks file for bashlinux_zabbix
+
+- name: setup RHEL zabbix repository
+  import_tasks: setup_rhel_zabbix_repo.yml
+  when: ansible_facts["os_family"] == "RedHat"
+
+- name: setup Ubuntu zabbix repository for 
+  import_tasks: setup_ubuntu_zabbix_repo.yml
+  when: ansible_facts["distribution"] == "Ubuntu"
+
+- name: install RHEL zabbix agent
+  import_tasks: install_rhel_zabbix_agent.yml
+  when:
+    - zabbix_agent
+    - ansible_facts["os_family"] == "RedHat"
+
+- name: install Ubuntu zabbix agent
+  import_tasks: install_ubuntu_zabbix_agent.yml
+  when:
+    - zabbix_agent
+    - ansible_facts["distribution"] == "Ubuntu"
+
+- name: install RHEL zabbix server
+  import_tasks: install_rhel_zabbix_server.yml
+  when:
+    - zabbix_server
+    - ansible_facts["os_family"] == "RedHat"
+
+#- name: install Ubuntu zabbix server
+#  import_tasks: install_ubuntu_zabbix_server.yml
+#  when:
+#    - zabbix_server
+#    - ansible_facts["distribution"] == "Ubuntu"

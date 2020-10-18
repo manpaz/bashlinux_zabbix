@@ -1,0 +1,45 @@
+---
+- yum:
+    name: zabbix-agent
+    state: present
+
+- lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    regexp: "^Server="
+    line: "Server={{ zabbix_server_ip }}"
+
+- lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    regexp: "^ServerActive="
+    line: "ServerActive={{ zabbix_server_ip }}"
+  notify: restart zabbix agent
+
+- lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    regexp: "^Server="
+    line: "Server={{ zabbix_server_ip }},127.0.0.1"
+  when: zabbix_server
+
+- lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    regexp: "^ServerActive="
+    line: "ServerActive={{ zabbix_server_ip }},127.0.0.1"
+  when: zabbix_server
+  notify: restart zabbix agent
+
+- firewalld:
+    port: 10051/tcp
+    immediate: true
+    permanent: true
+    state: enabled
+
+- copy:
+    src: zabbix_agent_mysql.te
+    dest: /tmp/zabbix_agent_mysql.te
+
+- shell:
+    cmd: |
+      checkmodule -M -m -o /tmp/zabbix_agent_mysql.mod /tmp/zabbix_agent_mysql.te
+      semodule_package  -m /tmp/zabbix_agent_mysql.mod -o /tmp/zabbix_agent_mysql.pp
+      semodule -i /tmp/zabbix_agent_mysql.pp
+

@@ -1,0 +1,112 @@
+---
+- import_tasks: install_rhel_zabbix_mysql.yml
+- import_tasks: install_rhel_zabbix_nginx.yml
+- import_tasks: install_rhel_zabbix_php.yml
+
+- yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - zabbix-server-mysql
+    - zabbix-web-mysql-scl
+    - zabbix-nginx-conf-scl
+
+- service:
+    name: zabbix-server
+    enabled: true
+    state: started
+
+- firewalld:
+    port: 10050/tcp
+    immediate: true
+    permanent: true
+    state: enabled
+
+- seboolean:
+    name: httpd_can_connect_zabbix
+    state: true
+    persistent: true
+
+- seboolean:
+    name: httpd_can_network_connect_db
+    state: true
+    persistent: true
+
+- copy:
+    src: zabbix_server.te
+    dest: /tmp/zabbix_server.te
+
+- shell:
+    cmd: |
+      checkmodule -M -m -o /tmp/zabbix_server.mod /tmp/zabbix_server.te
+      semodule_package  -m /tmp/zabbix_server.mod -o /tmp/zabbix_server.pp
+      semodule -i /tmp/zabbix_server.pp
+
+- shell:
+    cmd: ls /usr/share/doc/zabbix-server-mysql*/create.sql.gz
+  register: zabbix_db_schema
+
+- mysql_info:
+    filter: databases
+    login_unix_socket: "{{ mysql_datadir}}/mysql.sock"
+  register: db_info
+
+- mysql_db:
+    name: "{{ mysql_database }}"
+    state: import
+    target: "{{ zabbix_db_schema.stdout }}"
+    login_unix_socket: "{{ mysql_datadir}}/mysql.sock"
+  when: db_info.databases.zabbix.size is undefined
+
+- file:
+    src: /etc/opt/rh/rh-nginx116/nginx/conf.d/zabbix.conf
+    dest: /etc/nginx/conf.d/zabbix.conf
+    state: link
+
+- file:
+    path: /etc/zabbix/web
+    owner: nginx
+    group: nginx
+    state: directory
+
+- file:
+    path: /etc/zabbix/web
+    owner: nginx
+    group: nginx
+    state: directory
+
+- lineinfile:
+    path: /etc/opt/rh/rh-nginx116/nginx/conf.d/zabbix.conf
+    insertafter: 'example\.com;'
+    regexp: "^\tserver_name.*"
+    line: "\tserver_name {{ web_servername }};"
+  notify: restart web
+
+- lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    insertafter: '^# DBPassword='
+    regexp: "^DBPassword=.*"
+    line: "DBPassword={{ mysql_pass }}"
+  notify: restart zabbix server
+
+- lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    insertafter: '^# DBSocket='
+    regexp: "^DBSocket=.*"
+    line: "DBSocket={{ mysql_datadir }}/mysql.sock"
+  notify: restart zabbix server
+    
+- lineinfile:
+    path: /etc/opt/rh/rh-php72/php-fpm.d/zabbix.conf
+    insertafter: '\[date\.timezone\]'
+    regexp: "^php_value[date.timezone] =.*"
+    line: "php_value[date.timezone] = {{ php_timezone }}"
+  notify:
+    - restart php
+
+- replace:
+    path: /etc/opt/rh/rh-php72/php-fpm.d/zabbix.conf
+    regexp: "apache"
+    replace: "nginx"
+  notify:
+    - restart php

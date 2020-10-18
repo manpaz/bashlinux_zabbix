@@ -1,0 +1,24 @@
+module zabbix_agent_mysql 1.1;
+
+require {
+	type mysqld_t;
+	type var_lib_t;
+	type mysqld_etc_t;
+	type zabbix_agent_t;
+	type zabbix_var_lib_t;
+	class unix_stream_socket connectto;
+	class file { open read };
+}
+
+#============= zabbix_agent_t ==============
+allow zabbix_agent_t mysqld_etc_t:file open;
+
+#!!!! This avc is allowed in the current policy
+allow zabbix_agent_t mysqld_etc_t:file read;
+allow zabbix_agent_t mysqld_t:unix_stream_socket connectto;
+
+#!!!! WARNING: 'var_lib_t' is a base type.
+allow zabbix_agent_t var_lib_t:file read;
+allow zabbix_agent_t zabbix_var_lib_t:file open;
+allow zabbix_agent_t zabbix_var_lib_t:file read;
+
